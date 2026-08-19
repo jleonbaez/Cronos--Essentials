@@ -1,19 +1,8 @@
 """
-Always-On-Top Countdown Timer (v2)
-------------------------------------
-New in this version:
-  - Appearance dialog: change font color, font family, font size, background color
-  - Window can be shrunk much smaller (minimum ~80x40 px)
-  - Below a certain size, the event name and buttons auto-hide so only the
-    countdown numbers remain
-  - The native Windows title bar is recolored to match your background,
-    so it blends in instead of looking like a default white/gray bar
-    (requires Windows 10 1809+ or Windows 11; safely does nothing on other OSes)
-
+Cronos Essentials (v2)
 Run it with:
     python countdown_timer.py
 
-Settings + your event are saved to "countdown_config.json" next to this file.
 """
 
 import json
@@ -27,13 +16,13 @@ from datetime import datetime
 
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "countdown_config.json")
 
-# Window shrinks below these dimensions -> hide everything except the countdown
+
 COMPACT_WIDTH_THRESHOLD = 180
 COMPACT_HEIGHT_THRESHOLD = 95
 
 FONT_SIZE_MIN = 10
 FONT_SIZE_AUTO_MIN = 15
-# Widest typical countdown string used when probing max font size
+
 FONT_SIZE_PROBE = "999d 23:59:59"
 
 FONT_CHOICES = [
@@ -122,24 +111,24 @@ def set_title_bar_color(root, hex_color):
         DWMWA_USE_IMMERSIVE_DARK_MODE = 20
         DWMWA_CAPTION_COLOR = 35
 
-        # Turn on dark-mode title bar (works on Win10 1809+ and Win11)
+
         dark_value = ctypes.c_int(1)
         ctypes.windll.dwmapi.DwmSetWindowAttribute(
             hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE,
             ctypes.byref(dark_value), ctypes.sizeof(dark_value)
         )
 
-        # Set the exact caption color (Windows 11 build 22000+ only)
+
         hex_clean = hex_color.lstrip("#")
         r, g, b = (int(hex_clean[i:i + 2], 16) for i in (0, 2, 4))
-        colorref = r | (g << 8) | (b << 16)  # COLORREF is 0x00BBGGRR
+        colorref = r | (g << 8) | (b << 16) 
         color_value = ctypes.c_int(colorref)
         ctypes.windll.dwmapi.DwmSetWindowAttribute(
             hwnd, DWMWA_CAPTION_COLOR,
             ctypes.byref(color_value), ctypes.sizeof(color_value)
         )
     except Exception:
-        pass  # Older Windows without this API - silently skip
+        pass  
 
 
 class CountdownApp:
@@ -148,7 +137,7 @@ class CountdownApp:
         self.root.title("")
         self.root.attributes("-topmost", True)
         if sys.platform == "win32":
-            # Tool-window style keeps it out of the Alt+Tab list and the taskbar
+
             self.root.attributes("-toolwindow", True)
         self.root.minsize(80, 40)
         self.root.geometry("280x140+40+40")
@@ -166,7 +155,7 @@ class CountdownApp:
 
         self.root.configure(bg=self.bg_color)
 
-        # --- Widgets ---
+
         self.name_label = tk.Label(
             root, textvariable=self.event_name, font=("Segoe UI", 13, "bold"),
             bg=self.bg_color, fg="#ffffff"
@@ -202,10 +191,10 @@ class CountdownApp:
         )
         self.sync_button.pack(side="left", padx=4)
 
-        # Recolor the title bar once the window actually exists
+
         self.root.after(50, lambda: set_title_bar_color(self.root, self.bg_color))
 
-        # Watch for resizing to trigger compact mode
+
         self._is_compact = False
         self.root.bind("<Configure>", self.on_resize)
 
@@ -214,7 +203,7 @@ class CountdownApp:
 
         self.update_countdown()
 
-    # ---------- Compact mode ----------
+
     def on_resize(self, event):
         if event.widget != self.root:
             return
@@ -256,7 +245,7 @@ class CountdownApp:
             self.font_size = size
             self.time_label.configure(font=(self.font_family, self.font_size, "bold"))
 
-    # ---------- Set Event dialog ----------
+
     def open_edit_dialog(self):
         dialog = tk.Toplevel(self.root)
         dialog.title("Set Event")
@@ -300,7 +289,7 @@ class CountdownApp:
 
         tk.Button(dialog, text="Save", command=save_and_close).pack(pady=15)
 
-    # ---------- Appearance dialog ----------
+
     def open_appearance_dialog(self):
         dialog = tk.Toplevel(self.root)
         dialog.title("Appearance")
@@ -308,13 +297,13 @@ class CountdownApp:
         dialog.geometry("300x300")
         dialog.resizable(False, False)
 
-        # Font family
+      
         tk.Label(dialog, text="Font:").pack(pady=(10, 0))
         font_var = tk.StringVar(value=self.font_family)
         font_menu = ttk.Combobox(dialog, textvariable=font_var, values=FONT_CHOICES, state="readonly")
         font_menu.pack()
 
-        # Font size (capped so digits still fit when the window is maximized)
+       
         tk.Label(dialog, text="Font size:").pack(pady=(10, 0))
         size_var = tk.IntVar(value=self.font_size)
         tk.Spinbox(
@@ -322,7 +311,7 @@ class CountdownApp:
             textvariable=size_var, width=10
         ).pack()
 
-        # Font color
+      
         tk.Label(dialog, text="Digit color:").pack(pady=(10, 0))
         font_color_preview = tk.Label(dialog, text="       ", bg=self.font_color, relief="solid", bd=1)
         font_color_preview.pack()
@@ -336,7 +325,7 @@ class CountdownApp:
 
         tk.Button(dialog, text="Choose color", command=pick_font_color).pack(pady=(2, 0))
 
-        # Background color
+      
         tk.Label(dialog, text="Background color:").pack(pady=(10, 0))
         bg_color_preview = tk.Label(dialog, text="       ", bg=self.bg_color, relief="solid", bd=1)
         bg_color_preview.pack()
@@ -377,7 +366,7 @@ class CountdownApp:
             self.bg_color, self.font_color, self.font_family, self.font_size
         )
 
-    # ---------- Countdown loop ----------
+  
     def update_countdown(self):
         if self.target_dt:
             remaining = self.target_dt - datetime.now()
